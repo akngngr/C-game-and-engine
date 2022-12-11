@@ -17,7 +17,7 @@ File io_file_read(const char *path) {
     //file pointer using fopen function with read in binary permissions.
     FILE *fp = fopen(path, "rb");
 
-    if (ferror(fp)) {
+    if (!fp || ferror(fp)) {
         //not exiting if there is an error, this might be a save file that's 
         //missing, file name typo etc..
         ERROR_RETURN(file, IO_READ_ERROR_GENERAL, path, errno);
@@ -77,4 +77,17 @@ File io_file_read(const char *path) {
 	return file;
     
 }
-    int io_file_write(void *buffer, size_t size, const char *path);
+    int io_file_write(void *buffer, size_t size, const char *path) {
+        FILE *fp = fopen(path, "wb");
+        if ((!fp) || ferror(fp))
+            ERROR_RETURN(1, "Cannot write file: %s\n", path);
+
+        size_t chunks_written = fwrite(buffer, size, 1, fp);
+
+        fclose(fp);
+
+        if (chunks_written != 1)
+            ERROR_RETURN(1, "Write error. "
+                            "Expected 1 chunk, got %zu.\n", chunks_written);
+            return 0;
+    }

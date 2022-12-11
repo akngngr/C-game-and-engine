@@ -7,15 +7,37 @@
 #include <SDL2/SDL.h>
 
 #include "engine/global.h"
+#include "engine/config.h"
+#include "engine/input.h"
+#include "engine/time.h"
 
+static bool should_quit = false;
+static vec2 pos;
+
+static void input_handle(void) {
+    if (global.input.left == KS_PRESSED || global.input.left == KS_HELD)
+        pos[0] -= 500 * global.time.delta;
+    if (global.input.right == KS_PRESSED || global.input.right == KS_HELD)
+        pos[0] += 500 * global.time.delta;
+    if (global.input.up == KS_PRESSED || global.input.up == KS_HELD)
+        pos[1] += 500 * global.time.delta;
+    if (global.input.down == KS_PRESSED || global.input.down == KS_HELD)
+        pos[1] -= 500 * global.time.delta;
+    if (global.input.escape == KS_PRESSED || global.input.escape == KS_HELD)
+        should_quit = true;
+}
  //inside the main function Supplying SDL parameters for OpenGL
 int main(int argc, char *argv[]) {
+    time_init(60);
+    config_init();
     render_init();
 
-    bool should_quit = false;
+    pos[0] = global.render.width * 0.5;
+    pos[1] = global.render.height * 0.5;
 
     //while false continue looping
     while(!should_quit) {
+        time_update();
         //get events from SDL
         SDL_Event event;
 
@@ -30,14 +52,15 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        input_update();
+        input_handle();
+
         render_begin();
 
-        render_quad(
-            (vec2){global.render.width * 0.5, global.render.height * 0.5},
-            (vec2){50, 50},
-            (vec4){0, 1, 0, 1});
+        render_quad(pos, (vec2){50, 50}, (vec4){0, 1, 0, 1});
 
             render_end();
+            time_update_late();
     }
 
     return 0;
